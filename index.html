@@ -13,15 +13,16 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <!-- CryptoJS for eSewa V2 Signature -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Official eSewa Signature Scripts (From eSewa Site) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/hmac-sha256.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/enc-base64.min.js"></script>
 
     <style>
         :root {
             --primary: #2563eb; --accent: #f59e0b; --bg: #f8fafc; --white: #ffffff;
             --shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: #1e293b; overflow-x: hidden; }
 
@@ -44,7 +45,7 @@
 
         #order-processing-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9); z-index: 3000;
+            background: rgba(255, 255, 255, 0.95); z-index: 3000;
             display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         .main-spinner {
@@ -58,40 +59,32 @@
         @media (min-width: 768px) { .p-grid { grid-template-columns: repeat(4, 1fr); } }
         .p-card { background: white; padding: 15px; border-radius: 20px; box-shadow: var(--shadow); text-align: center; }
         .p-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 15px; margin-bottom: 8px; }
-        .p-card h3 { font-size: 13px; margin-bottom: 5px; height: 35px; overflow: hidden; }
         .p-card .price { color: var(--primary); font-weight: 800; display: block; margin-bottom: 10px; }
 
-        .card { background: white; padding: 25px; border-radius: 25px; box-shadow: var(--shadow); max-width: 500px; margin: 0 auto; }
+        .card { background: white; padding: 25px; border-radius: 25px; box-shadow: var(--shadow); max-width: 900px; margin: 0 auto; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 5px; color: #64748b; }
         .req::after { content: " *"; color: #ef4444; }
         .form-group input { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none; }
+        .invalid { border-color: #ef4444 !important; background: #fff5f5; }
 
-        .summary-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 18px; border-radius: 18px; margin-top: 15px; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-        .total-highlight { 
-            background: #2563eb; color: white; padding: 18px; border-radius: 15px; 
-            margin-top: 15px; font-weight: 800; font-size: 18px; display: flex; justify-content: space-between;
-        }
+        .summary-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 18px; border-radius: 18px; }
+        .total-highlight { background: #2563eb; color: white; padding: 18px; border-radius: 15px; margin-top: 15px; font-weight: 800; font-size: 18px; display: flex; justify-content: space-between; }
 
-        .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .opt { border: 2px solid #f1f5f9; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: 700; font-size: 12px; }
+        .opt { border: 2px solid #f1f5f9; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: 700; font-size: 12px; margin-bottom: 10px; }
         .opt.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
 
         .status-badge { font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 800; }
         .Pending { background: #fef3c7; color: #d97706; }
-        .Delivered { background: #dcfce7; color: #16a34a; }
 
         #toast { position: fixed; bottom: 20px; width: 90%; left: 5%; background: #0f172a; color: white; padding: 15px; border-radius: 12px; text-align: center; display: none; z-index: 2000; }
-        footer { background: #0f172a; color: #94a3b8; padding: 30px; text-align: center; font-size: 11px; margin-top: 40px; }
     </style>
 </head>
 <body>
 
-    <!-- Center Loader -->
     <div id="order-processing-loader">
         <div class="main-spinner"></div>
-        <p style="font-weight: 700; color: var(--primary);">Redirecting to Secure Payment...</p>
+        <p style="font-weight: 700; color: var(--primary);">Connecting to eSewa Secure Gateway...</p>
     </div>
 
     <!-- Hidden eSewa V2 Form -->
@@ -114,7 +107,7 @@
         <div class="header-actions">
             <div id="auth-ui" style="display: flex; gap: 5px;"></div>
             <div class="btn" style="padding: 10px; font-size: 18px;" onclick="navigateTo('cart')">
-                <i class="fas fa-shopping-bag"></i><span id="cart-count" style="font-size: 10px; position: absolute; top: 0; right: 0; background: var(--accent); color: white; padding: 2px 5px; border-radius: 50%;">0</span>
+                <i class="fas fa-shopping-bag"></i><span id="cart-count">0</span>
             </div>
         </div>
     </header>
@@ -154,29 +147,29 @@
             <h2 style="margin-bottom: 20px;">Order Details</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div>
-                    <div class="form-group"><label class="req">Receiver Name</label><input type="text" id="c-name"></div>
-                    <div class="form-group"><label class="req">Mobile Number</label><input type="tel" id="c-phone"></div>
-                    <div class="form-group"><label class="req">Address</label><input type="text" id="c-addr"></div>
+                    <div class="form-group"><label class="req">Receiver Name</label><input type="text" id="c-name" class="v-field"></div>
+                    <div class="form-group"><label class="req">Mobile Number</label><input type="tel" id="c-phone" class="v-field"></div>
+                    <div class="form-group"><label class="req">Address</label><input type="text" id="c-addr" class="v-field"></div>
                     
                     <label class="req" style="font-size: 11px; font-weight: 800;">Location</label>
-                    <div class="opt-grid">
-                        <div class="opt" id="opt-home" onclick="setLoc('home')">Home</div>
-                        <div class="opt" id="opt-office" onclick="setLoc('office')">Office</div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="opt" style="flex:1" id="opt-home" onclick="setLoc('home')">Home</div>
+                        <div class="opt" style="flex:1" id="opt-office" onclick="setLoc('office')">Office</div>
                     </div>
 
-                    <label class="req" style="font-size: 11px; font-weight: 800;">Payment</label>
-                    <div class="opt-grid">
-                        <div class="opt" id="opt-esewa" onclick="setPay('esewa')">eSewa</div>
-                        <div class="opt" id="opt-cod" onclick="setPay('cod')">COD</div>
+                    <label class="req" style="font-size: 11px; font-weight: 800;">Payment Method</label>
+                    <div style="display:flex; gap:10px;">
+                        <div class="opt" style="flex:1" id="opt-esewa" onclick="setPay('esewa')">eSewa</div>
+                        <div class="opt" style="flex:1" id="opt-cod" onclick="setPay('cod')">COD</div>
                     </div>
                 </div>
 
                 <div class="summary-box">
-                    <h3>Statement</h3>
+                    <h3>Payment Statement</h3>
                     <div id="summ-items" style="font-size: 11px; margin: 10px 0;"></div>
-                    <div class="stat-row"><span>Products:</span><span id="p-price">Rs. 0</span></div>
-                    <div class="stat-row"><span>Delivery:</span><span id="p-del">Rs. 0</span></div>
-                    <div class="stat-row" id="p-cod-row" style="display: none; color: red;"><span>COD:</span><span>Rs. 10</span></div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;"><span>Products:</span><span id="p-price">Rs. 0</span></div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;"><span>Delivery:</span><span id="p-del">Rs. 0</span></div>
+                    <div id="p-cod-row" style="display:none; justify-content:space-between; font-size:13px; color:red;"><span>COD Charge:</span><span>Rs. 10</span></div>
                     <div class="total-highlight"><span>Total:</span><span id="p-total">Rs. 0</span></div>
                     <button class="btn btn-p" style="width: 100%; margin-top: 20px; background: #10b981;" onclick="placeOrder()">Confirm Order</button>
                 </div>
@@ -188,16 +181,8 @@
     <section id="my-orders" class="page"><div class="card"><h2>My Orders</h2><div id="user-orders-container"></div></div></section>
 
     <script>
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCSuPmip1gdOPNaf047Xoctwv2wRGSKX2g",
-            authDomain: "rkcube-3d7e6.firebaseapp.com",
-            databaseURL: "https://rkcube-3d7e6-default-rtdb.firebaseio.com/", // Check if this is correct
-            projectId: "rkcube-3d7e6",
-            storageBucket: "rkcube-3d7e6.firebasestorage.app",
-            messagingSenderId: "337754647320",
-            appId: "1:337754647320:web:074b5c0d3428d43242cc6d"
-        };
+        // --- FIREBASE CONFIG (Add your details) ---
+        const firebaseConfig = { apiKey: "AIzaSyCSuPmip1gdOPNaf047Xoctwv2wRGSKX2g", authDomain: "rkcube-3d7e6.firebaseapp.com", databaseURL: "https://rkcube-3d7e6-default-rtdb.firebaseio.com", projectId: "rkcube-3d7e6", storageBucket: "rkcube-3d7e6.firebasestorage.app", messagingSenderId: "337754647320", appId: "1:337754647320:web:074b5c0d3428d43242cc6d" };
         firebase.initializeApp(firebaseConfig);
         var auth = firebase.auth();
         var db = firebase.database();
@@ -213,7 +198,7 @@
 
         window.navigateTo = function(id) {
             if(id === 'checkout' && !auth.currentUser) { alert("Please Login!"); navigateTo('login'); return; }
-            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'my-orders') loadUserHistory();
             window.scrollTo(0,0);
@@ -223,50 +208,44 @@
             var e = document.getElementById('log-email').value;
             var p = document.getElementById('log-pass').value;
             if(e === "admin@gmail.com" && p === "admin123") { navigateTo('admin-dash'); loadAdminOrders(); }
-            else { auth.signInWithEmailAndPassword(e, p).then(function() { navigateTo('home'); }).catch(function(err) { alert(err.message); }); }
+            else { auth.signInWithEmailAndPassword(e, p).then(() => navigateTo('home')).catch(err => alert(err.message)); }
         };
 
         window.handleSignup = function() {
             var n = document.getElementById('reg-name').value;
             var e = document.getElementById('reg-email').value;
             var p = document.getElementById('reg-pass').value;
-            auth.createUserWithEmailAndPassword(e, p).then(function(res) { db.ref('users/' + res.user.uid).set({ name: n, email: e }); navigateTo('home'); }).catch(function(err) { alert(err.message); });
+            auth.createUserWithEmailAndPassword(e, p).then(res => { db.ref('users/' + res.user.uid).set({ name: n, email: e }); navigateTo('home'); }).catch(err => alert(err.message));
         };
 
-        auth.onAuthStateChanged(function(user) {
+        auth.onAuthStateChanged(user => {
             var ui = document.getElementById('auth-ui');
             ui.innerHTML = user ? '<button class="btn btn-s" onclick="navigateTo(\'my-orders\')">History</button><button class="btn btn-s" onclick="firebase.auth().signOut()">Logout</button>' : '<button class="btn btn-s" onclick="navigateTo(\'login\')">Login</button>';
         });
 
         function renderShop() {
             var html = "";
-            products.forEach(function(p) { html += '<div class="p-card"><img src="'+p.img+'"><h3>'+p.name+'</h3><span class="price">Rs. '+p.price+'</span><button class="btn btn-p" style="width:100%" onclick="addToBag('+p.id+')">Add to Cart</button></div>'; });
+            products.forEach(p => { html += `<div class="p-card"><img src="${p.img}"><h3>${p.name}</h3><span class="price">Rs. ${p.price}</span><button class="btn btn-p" style="width:100%" onclick="addToBag(${p.id})">Add to Cart</button></div>`; });
             document.getElementById('product-list').innerHTML = html;
         }
 
-        window.addToBag = function(id) {
-            var p = products.find(function(i) { return i.id === id; });
-            cart.push(p);
-            updateBag();
-        };
+        window.addToBag = function(id) { cart.push(products.find(i => i.id === id)); updateBag(); };
 
         function updateBag() {
             document.getElementById('cart-count').innerText = cart.length;
             var box = document.getElementById('cart-items');
             if(cart.length === 0) { box.innerHTML = "Empty"; document.getElementById('btn-to-checkout').style.display = 'none'; return; }
             document.getElementById('btn-to-checkout').style.display = 'block';
-            var h = "";
-            cart.forEach(function(item, idx) { h += '<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;"><span>'+item.name+'</span><b>Rs. '+item.price+' <i class="fas fa-trash" onclick="removeBag('+idx+')" style="color:red; cursor:pointer; margin-left:10px;"></i></b></div>'; });
-            box.innerHTML = h;
+            box.innerHTML = cart.map((item, idx) => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;"><span>${item.name}</span><b>Rs. ${item.price} <i class="fas fa-trash" onclick="removeBag(${idx})" style="color:red; cursor:pointer; margin-left:10px;"></i></b></div>`).join('');
         }
 
-        window.removeBag = function(idx) { cart.splice(idx, 1); updateBag(); };
+        window.removeBag = idx => { cart.splice(idx, 1); updateBag(); };
 
-        window.setLoc = function(t) { locType = t; document.getElementById('opt-home').classList.toggle('active', t === 'home'); document.getElementById('opt-office').classList.toggle('active', t === 'office'); updateSummary(); };
-        window.setPay = function(m) { payMethod = m; document.getElementById('opt-esewa').classList.toggle('active', m === 'esewa'); document.getElementById('opt-cod').classList.toggle('active', m === 'cod'); updateSummary(); };
+        window.setLoc = t => { locType = t; document.getElementById('opt-home').classList.toggle('active', t === 'home'); document.getElementById('opt-office').classList.toggle('active', t === 'office'); updateSummary(); };
+        window.setPay = m => { payMethod = m; document.getElementById('opt-esewa').classList.toggle('active', m === 'esewa'); document.getElementById('opt-cod').classList.toggle('active', m === 'cod'); updateSummary(); };
 
         function updateSummary() {
-            var sub = 0; cart.forEach(function(i){ sub += i.price; });
+            var sub = 0; cart.forEach(i => sub += i.price);
             var del = locType === 'home' ? 250 : (locType === 'office' ? 220 : 0);
             var cod = payMethod === 'cod' ? 10 : 0;
             var total = sub + del + cod;
@@ -274,18 +253,16 @@
             document.getElementById('p-del').innerText = "Rs. " + del;
             document.getElementById('p-cod-row').style.display = cod > 0 ? 'flex' : 'none';
             document.getElementById('p-total').innerText = "Rs. " + total;
-            document.getElementById('summ-items').innerText = cart.map(function(i){ return i.name; }).join(', ');
         }
 
-        // --- ESEWA V2 SIGNATURE GENERATION ---
+        // --- OFFICIAL ESEWA V2 SIGNATURE LOGIC ---
         function generateSignature(total_amount, transaction_uuid, product_code) {
-            var secretKey = "8g8Mp2H_ogpYpY6G"; // eSewa Test Secret Key
-            var hashString = "total_amount=" + total_amount + ",transaction_uuid=" + transaction_uuid + ",product_code=" + product_code;
-            var hash = CryptoJS.HmacSHA256(hashString, secretKey);
+            var secretKey = "8g8Mp2H_ogpYpY6G"; // Official Test Secret
+            var message = "total_amount=" + total_amount + ",transaction_uuid=" + transaction_uuid + ",product_code=" + product_code;
+            var hash = CryptoJS.HmacSHA256(message, secretKey);
             return CryptoJS.enc.Base64.stringify(hash);
         }
 
-        // --- PLACE ORDER WITH ESEWA V2 ---
         window.placeOrder = function() {
             if(!auth.currentUser) return;
             var n = document.getElementById('c-name').value;
@@ -294,41 +271,32 @@
 
             if(!n || !ph || !ad || !locType || !payMethod) { alert("Fill all details!"); return; }
 
-            if(confirm("Confirm order?")) {
+            if(confirm("Confirm your order?")) {
                 document.getElementById('order-processing-loader').style.display = 'flex';
 
                 var subTotal = 0; cart.forEach(i => subTotal += i.price);
                 var del = locType === 'home' ? 250 : (locType === 'office' ? 220 : 0);
                 var cod = payMethod === 'cod' ? 10 : 0;
-                var total = subTotal + del + cod;
+                var totalAmount = subTotal + del + cod;
                 var uuid = "RKC-" + Date.now();
 
-                var orderData = {
-                    uid: auth.currentUser.uid,
-                    customer: n, phone: ph, address: ad,
-                    items: cart, total: total,
-                    status: "Pending", payment: payMethod, date: new Date().toLocaleString()
-                };
+                var orderData = { uid: auth.currentUser.uid, customer: n, phone: ph, address: ad, items: cart, total: totalAmount, status: "Pending", payment: payMethod, date: new Date().toLocaleString() };
 
                 db.ref('orders').push(orderData, function(error) {
-                    if (error) { 
-                        alert(error.message); 
-                        document.getElementById('order-processing-loader').style.display = 'none'; 
-                    } 
+                    if (error) { alert(error.message); document.getElementById('order-processing-loader').style.display = 'none'; } 
                     else {
                         if(payMethod === 'esewa') {
-                            // Populate eSewa V2 Form
+                            // Map values to eSewa form exactly
                             document.getElementById('amount').value = subTotal;
                             document.getElementById('product_delivery_charge').value = del + cod;
-                            document.getElementById('total_amount').value = total;
+                            document.getElementById('total_amount').value = totalAmount;
                             document.getElementById('transaction_uuid').value = uuid;
                             
-                            // Generate V2 Signature
-                            var sig = generateSignature(total, uuid, "EPAYTEST");
+                            // Call Official Signature logic
+                            var sig = generateSignature(totalAmount, uuid, "EPAYTEST");
                             document.getElementById('signature').value = sig;
                             
-                            // Submit V2 Form
-                            document.getElementById('esewa-form').submit();
+                            setTimeout(() => { document.getElementById('esewa-form').submit(); }, 500);
                         } else {
                             document.getElementById('order-processing-loader').style.display = 'none';
                             alert("✅ Order Placed! (COD)");
@@ -340,20 +308,14 @@
         };
 
         function loadAdminOrders() {
-            db.ref('orders').on('value', function(snap) {
-                var h = ""; snap.forEach(function(child) {
-                    var d = child.val();
-                    h += '<div style="padding:10px; border:1px solid #ccc; margin-bottom:5px;"><b>'+d.customer+'</b><br>Rs. '+d.total+'<br>Status: '+d.status+'</div>';
-                });
+            db.ref('orders').on('value', snap => {
+                var h = ""; snap.forEach(child => { h += `<div style="padding:10px; border:1px solid #ccc; margin-bottom:5px;"><b>${child.val().customer}</b><br>Rs. ${child.val().total}<br>Status: ${child.val().status}</div>`; });
                 document.getElementById('admin-orders-container').innerHTML = h;
             });
         }
         function loadUserHistory() {
-            db.ref('orders').on('value', function(snap) {
-                var h = ""; snap.forEach(function(child) {
-                    var d = child.val();
-                    if(d.uid === auth.currentUser.uid) h += '<div style="padding:10px; border:1px solid #eee; margin-bottom:5px;"><b>'+d.date+'</b> - Rs. '+d.total+'</div>';
-                });
+            db.ref('orders').on('value', snap => {
+                var h = ""; snap.forEach(child => { if(child.val().uid === auth.currentUser.uid) h += `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px;"><b>${child.val().date}</b> - Rs. ${child.val().total}</div>`; });
                 document.getElementById('user-orders-container').innerHTML = h;
             });
         }
