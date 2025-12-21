@@ -12,6 +12,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- CryptoJS for eSewa V2 Signature -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
         :root {
@@ -39,7 +42,6 @@
         .btn-p { background: var(--primary); color: white; }
         .btn-s { background: #eff6ff; color: var(--primary); }
 
-        /* Loader */
         #order-processing-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); z-index: 3000;
@@ -52,7 +54,6 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Shop Grid */
         .p-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         @media (min-width: 768px) { .p-grid { grid-template-columns: repeat(4, 1fr); } }
         .p-card { background: white; padding: 15px; border-radius: 20px; box-shadow: var(--shadow); text-align: center; }
@@ -66,7 +67,6 @@
         .req::after { content: " *"; color: #ef4444; }
         .form-group input { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none; }
 
-        /* Statement Box */
         .summary-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 18px; border-radius: 18px; margin-top: 15px; }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
         .total-highlight { 
@@ -91,20 +91,22 @@
     <!-- Center Loader -->
     <div id="order-processing-loader">
         <div class="main-spinner"></div>
-        <p style="font-weight: 700; color: var(--primary);">Redirecting to Payment...</p>
+        <p style="font-weight: 700; color: var(--primary);">Redirecting to Secure Payment...</p>
     </div>
 
-    <!-- Hidden eSewa Form -->
-    <form action="https://uat.esewa.com.np/epay/main" method="POST" id="esewa-form" style="display:none;">
-        <input value="" name="tAmt" id="esewa-tAmt" type="hidden">
-        <input value="" name="amt" id="esewa-amt" type="hidden">
-        <input value="0" name="txAmt" type="hidden">
-        <input value="0" name="psc" type="hidden">
-        <input value="" name="pdc" id="esewa-pdc" type="hidden">
-        <input value="EPAYTEST" name="scd" type="hidden">
-        <input value="" name="pid" id="esewa-pid" type="hidden">
-        <input value="https://www.kbr.com.np" name="su" type="hidden">
-        <input value="https://www.kbr.com.np" name="fu" type="hidden">
+    <!-- Hidden eSewa V2 Form -->
+    <form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST" id="esewa-form" style="display:none;">
+        <input type="text" id="amount" name="amount" required>
+        <input type="text" id="tax_amount" name="tax_amount" value="0" required>
+        <input type="text" id="total_amount" name="total_amount" required>
+        <input type="text" id="transaction_uuid" name="transaction_uuid" required>
+        <input type="text" id="product_code" name="product_code" value="EPAYTEST" required>
+        <input type="text" id="product_service_charge" name="product_service_charge" value="0" required>
+        <input type="text" id="product_delivery_charge" name="product_delivery_charge" value="0" required>
+        <input type="text" id="success_url" name="success_url" value="https://www.kbr.com.np" required>
+        <input type="text" id="failure_url" name="failure_url" value="https://www.kbr.com.np" required>
+        <input type="text" id="signed_field_names" name="signed_field_names" value="total_amount,transaction_uuid,product_code" required>
+        <input type="text" id="signature" name="signature" required>
     </form>
 
     <header>
@@ -182,21 +184,21 @@
         </div>
     </section>
 
-    <!-- Admin & History sections hidden for brevity -->
     <section id="admin-dash" class="page"><div class="card"><h2>Admin Dashboard</h2><div id="admin-orders-container"></div></div></section>
     <section id="my-orders" class="page"><div class="card"><h2>My Orders</h2><div id="user-orders-container"></div></div></section>
 
     <script>
-        // --- FIREBASE CONFIG (Yo same rakhnuhos) ---
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
-  apiKey: "AIzaSyCSuPmip1gdOPNaf047Xoctwv2wRGSKX2g",
-  authDomain: "rkcube-3d7e6.firebaseapp.com",
-  projectId: "rkcube-3d7e6",
-  storageBucket: "rkcube-3d7e6.firebasestorage.app",
-  messagingSenderId: "337754647320",
-  appId: "1:337754647320:web:074b5c0d3428d43242cc6d"
-};
-    firebase.initializeApp(firebaseConfig);
+            apiKey: "AIzaSyCSuPmip1gdOPNaf047Xoctwv2wRGSKX2g",
+            authDomain: "rkcube-3d7e6.firebaseapp.com",
+            databaseURL: "https://rkcube-3d7e6-default-rtdb.firebaseio.com/", // Check if this is correct
+            projectId: "rkcube-3d7e6",
+            storageBucket: "rkcube-3d7e6.firebasestorage.app",
+            messagingSenderId: "337754647320",
+            appId: "1:337754647320:web:074b5c0d3428d43242cc6d"
+        };
+        firebase.initializeApp(firebaseConfig);
         var auth = firebase.auth();
         var db = firebase.database();
 
@@ -273,15 +275,17 @@
             document.getElementById('p-cod-row').style.display = cod > 0 ? 'flex' : 'none';
             document.getElementById('p-total').innerText = "Rs. " + total;
             document.getElementById('summ-items').innerText = cart.map(function(i){ return i.name; }).join(', ');
-            
-            // Set eSewa hidden fields
-            document.getElementById('esewa-amt').value = sub;
-            document.getElementById('esewa-pdc').value = del + cod;
-            document.getElementById('esewa-tAmt').value = total;
-            document.getElementById('esewa-pid').value = "RKC" + Date.now();
         }
 
-        // --- PLACE ORDER WITH ESEWA ---
+        // --- ESEWA V2 SIGNATURE GENERATION ---
+        function generateSignature(total_amount, transaction_uuid, product_code) {
+            var secretKey = "8g8Mp2H_ogpYpY6G"; // eSewa Test Secret Key
+            var hashString = "total_amount=" + total_amount + ",transaction_uuid=" + transaction_uuid + ",product_code=" + product_code;
+            var hash = CryptoJS.HmacSHA256(hashString, secretKey);
+            return CryptoJS.enc.Base64.stringify(hash);
+        }
+
+        // --- PLACE ORDER WITH ESEWA V2 ---
         window.placeOrder = function() {
             if(!auth.currentUser) return;
             var n = document.getElementById('c-name').value;
@@ -293,17 +297,37 @@
             if(confirm("Confirm order?")) {
                 document.getElementById('order-processing-loader').style.display = 'flex';
 
+                var subTotal = 0; cart.forEach(i => subTotal += i.price);
+                var del = locType === 'home' ? 250 : (locType === 'office' ? 220 : 0);
+                var cod = payMethod === 'cod' ? 10 : 0;
+                var total = subTotal + del + cod;
+                var uuid = "RKC-" + Date.now();
+
                 var orderData = {
                     uid: auth.currentUser.uid,
                     customer: n, phone: ph, address: ad,
-                    items: cart, total: document.getElementById('p-total').innerText,
+                    items: cart, total: total,
                     status: "Pending", payment: payMethod, date: new Date().toLocaleString()
                 };
 
                 db.ref('orders').push(orderData, function(error) {
-                    if (error) { alert(error.message); document.getElementById('order-processing-loader').style.display = 'none'; } 
+                    if (error) { 
+                        alert(error.message); 
+                        document.getElementById('order-processing-loader').style.display = 'none'; 
+                    } 
                     else {
                         if(payMethod === 'esewa') {
+                            // Populate eSewa V2 Form
+                            document.getElementById('amount').value = subTotal;
+                            document.getElementById('product_delivery_charge').value = del + cod;
+                            document.getElementById('total_amount').value = total;
+                            document.getElementById('transaction_uuid').value = uuid;
+                            
+                            // Generate V2 Signature
+                            var sig = generateSignature(total, uuid, "EPAYTEST");
+                            document.getElementById('signature').value = sig;
+                            
+                            // Submit V2 Form
                             document.getElementById('esewa-form').submit();
                         } else {
                             document.getElementById('order-processing-loader').style.display = 'none';
@@ -315,12 +339,11 @@
             }
         };
 
-        // Admin & User history logic (kept same as previous version)
         function loadAdminOrders() {
             db.ref('orders').on('value', function(snap) {
                 var h = ""; snap.forEach(function(child) {
                     var d = child.val();
-                    h += '<div class="order-item"><b>'+d.customer+'</b><br>'+d.total+'<br>Status: '+d.status+'</div>';
+                    h += '<div style="padding:10px; border:1px solid #ccc; margin-bottom:5px;"><b>'+d.customer+'</b><br>Rs. '+d.total+'<br>Status: '+d.status+'</div>';
                 });
                 document.getElementById('admin-orders-container').innerHTML = h;
             });
@@ -329,7 +352,7 @@
             db.ref('orders').on('value', function(snap) {
                 var h = ""; snap.forEach(function(child) {
                     var d = child.val();
-                    if(d.uid === auth.currentUser.uid) h += '<div class="order-item"><b>'+d.date+'</b> - '+d.total+'</div>';
+                    if(d.uid === auth.currentUser.uid) h += '<div style="padding:10px; border:1px solid #eee; margin-bottom:5px;"><b>'+d.date+'</b> - Rs. '+d.total+'</div>';
                 });
                 document.getElementById('user-orders-container').innerHTML = h;
             });
