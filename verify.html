@@ -3,57 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loksewa Solution - Account Action</title>
+    <title>Loksewa Solution - Secure Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { background: white; padding: 40px; border-radius: 35px; box-shadow: 0 20px 50px rgba(10, 71, 194, 0.08); text-align: center; max-width: 420px; width: 90%; display: none; }
-        .icon-wrapper { width: 80px; height: 80px; background: #135bec; border-radius: 40px; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; }
-        h2 { color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 15px; }
-        p { color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 25px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; }
         
-        /* Input & Form Styles */
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 15px; font-size: 16px; outline: none; }
-        input:focus { border-color: #135bec; }
+        /* --- MAIN CARD DESIGN --- */
+        .card { background: white; padding: 45px 35px; border-radius: 35px; box-shadow: 0 20px 50px rgba(10, 71, 194, 0.08); text-align: center; max-width: 420px; width: 92%; display: none; border: 1px solid rgba(0,0,0,0.02); }
+        .icon-circle { width: 85px; height: 85px; background: #135bec; border-radius: 45px; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 10px 20px rgba(19, 91, 236, 0.2); }
         
-        .btn { display: block; width: 100%; background: #135bec; color: white; padding: 18px; border-radius: 15px; text-decoration: none; font-weight: 700; border: none; cursor: pointer; font-size: 15px; }
-        .btn:disabled { background: #cbd5e1; }
+        h2 { color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px; }
+        p { color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+        
+        /* --- FORM ELEMENTS --- */
+        input { width: 100%; padding: 16px; border-radius: 14px; border: 2px solid #e2e8f0; margin-bottom: 15px; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #135bec; box-shadow: 0 0 0 4px rgba(19, 91, 236, 0.1); }
+        
+        .btn { display: block; width: 100%; background: #135bec; color: white; padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 700; border: none; cursor: pointer; font-size: 15px; transition: 0.3s; }
+        .btn:hover { background: #0a47c2; transform: translateY(-1px); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        /* Progress Bar */
+        /* --- PROGRESS BAR --- */
         .progress-container { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden; margin-bottom: 25px; display: none; }
         .progress-fill { width: 0%; height: 100%; background: #10b981; border-radius: 10px; }
         
-        #not-found { color: #94a3b8; text-align: center; display: none; }
+        /* --- 404 STATE --- */
+        #not-found { text-align: center; display: none; }
+        #not-found h1 { font-size: 70px; color: #cbd5e1; }
+        #not-found p { color: #94a3b8; }
+
+        .footer-brand { margin-top: 30px; font-size: 11px; color: #cbd5e1; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <!-- 1. PASSWORD RESET UI -->
+    <!-- 1. UI: PASSWORD RESET -->
     <div id="reset-ui" class="card">
-        <div class="icon-wrapper">
+        <div class="icon-circle">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"/></svg>
         </div>
         <h2>Reset Password</h2>
-        <p>Please enter your new secure password for Loksewa Solution.</p>
-        <input type="password" id="new-password" placeholder="New Password (min 6 chars)">
+        <p>Your identity is verified. Please enter a new secure password below.</p>
+        <input type="password" id="new-password" placeholder="Enter New Password">
         <button id="reset-btn" class="btn" onclick="handleReset()">UPDATE PASSWORD</button>
+        <p class="footer-brand">Loksewa Solution</p>
     </div>
 
-    <!-- 2. EMAIL VERIFY / SUCCESS UI -->
+    <!-- 2. UI: EMAIL CHANGE / VERIFICATION SUCCESS -->
     <div id="success-ui" class="card">
-        <div id="success-icon" class="icon-wrapper" style="background: #10b981;">
+        <div class="icon-circle" style="background: #10b981;">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
-        <h2 id="success-title">Verification Done!</h2>
-        <p id="success-msg">Your credentials are updated. Returning to app...</p>
+        <h2 id="status-title">Verifying...</h2>
+        <p id="status-msg">Please wait while we secure your account update.</p>
+        
         <div id="p-bar" class="progress-container"><div id="bar" class="progress-fill"></div></div>
-        <a href="loksewasolution://login" class="btn" style="background: #0f172a;">OPEN APP NOW</a>
+        
+        <a id="app-btn" href="loksewasolution://personal-info" class="btn" style="background: #0f172a; display: none;">RETURN TO APP</a>
+        <p class="footer-brand">Loksewa Solution</p>
     </div>
 
-    <!-- 3. ERROR UI -->
+    <!-- 3. UI: 404 NOT FOUND -->
     <div id="not-found">
-        <h1 style="font-size: 60px;">404</h1>
-        <p>Invalid or expired link.</p>
+        <h1>404</h1>
+        <p>Invalid or expired security link.</p>
     </div>
 
     <script>
@@ -62,30 +75,61 @@
         const oobCode = urlParams.get('oobCode');
         const apiKey = urlParams.get('apiKey');
 
-        window.onload = function() {
-            if (!oobCode) {
+        window.onload = async function() {
+            if (!oobCode || !mode) {
                 document.getElementById('not-found').style.display = 'block';
                 return;
             }
 
+            // MODE CHECKING
             if (mode === 'resetPassword') {
                 document.getElementById('reset-ui').style.display = 'block';
-            } else if (mode === 'verifyEmail' || mode === 'verifyBeforeUpdateEmail') {
+            } 
+            else if (mode === 'verifyAndChangeEmail' || mode === 'verifyEmail') {
                 document.getElementById('success-ui').style.display = 'block';
-                startRedirectCountdown();
-            } else {
+                handleEmailVerification();
+            } 
+            else {
                 document.getElementById('not-found').style.display = 'block';
             }
         };
 
-        // PASSWORD RESET LOGIC
+        // --- EMAIL VERIFICATION LOGIC ---
+        async function handleEmailVerification() {
+            const title = document.getElementById('status-title');
+            const msg = document.getElementById('status-msg');
+
+            try {
+                // Firebase API लाई इमेल भेरिफाई गर्न अर्डर दिने
+                const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ oobCode }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (data.email) {
+                    title.innerText = "Email Updated!";
+                    msg.innerText = "Your new email is verified. Redirecting you back to the app...";
+                    startRedirectCountdown("loksewasolution://personal-info");
+                } else {
+                    title.innerText = "Link Expired";
+                    msg.innerText = "This link is no longer valid. Please request a new one from the app.";
+                }
+            } catch (e) {
+                title.innerText = "System Error";
+                msg.innerText = "Could not connect to security servers.";
+            }
+        }
+
+        // --- PASSWORD RESET LOGIC ---
         async function handleReset() {
             const newPassword = document.getElementById('new-password').value;
-            if (newPassword.length < 6) return alert("Password must be at least 6 characters.");
+            if (newPassword.length < 6) return alert("Password must be 6+ characters.");
 
             const btn = document.getElementById('reset-btn');
             btn.disabled = true;
-            btn.innerText = "UPDATING...";
+            btn.innerText = "PROCESSING...";
 
             try {
                 const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${apiKey}`, {
@@ -96,12 +140,11 @@
                 const data = await res.json();
 
                 if (data.email) {
-                    // Success: Show Success UI
                     document.getElementById('reset-ui').style.display = 'none';
                     document.getElementById('success-ui').style.display = 'block';
-                    document.getElementById('success-title').innerText = "Password Changed!";
-                    document.getElementById('success-msg').innerText = "Your new password is set. Please login in the app.";
-                    startRedirectCountdown();
+                    document.getElementById('status-title').innerText = "Password Set!";
+                    document.getElementById('status-msg').innerText = "Your new password is now active. Returning to Login...";
+                    startRedirectCountdown("loksewasolution://login");
                 } else {
                     alert("Error: " + data.error.message);
                     btn.disabled = false;
@@ -113,21 +156,26 @@
             }
         }
 
-        // REDIRECT LOGIC
-        function startRedirectCountdown() {
+        // --- REDIRECT ENGINE ---
+        function startRedirectCountdown(appPath) {
             const pBar = document.getElementById('p-bar');
             const bar = document.getElementById('bar');
+            const appBtn = document.getElementById('app-btn');
+            
             pBar.style.display = 'block';
-            let width = 0;
+            appBtn.style.display = 'block';
+            appBtn.href = appPath;
+
+            let progress = 0;
             const interval = setInterval(function() {
-                if (width >= 100) {
+                if (progress >= 100) {
                     clearInterval(interval);
-                    window.location.href = "loksewasolution://login";
+                    window.location.href = appPath;
                 } else {
-                    width += 1;
-                    bar.style.width = width + '%';
+                    progress += 1;
+                    bar.style.width = progress + '%';
                 }
-            }, 25); 
+            }, 25); // 25ms * 100 = 2.5 seconds
         }
     </script>
 </body>
