@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified - Loksewa Solution</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f0f4ff; 
+        }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(10, 71, 194, 0.1); 
+            text-align: center; 
+            max-width: 400px; 
+            width: 90%; 
+        }
+        .icon-box { 
+            width: 80px; 
+            height: 80px; 
+            background: #135bec; 
+            border-radius: 40px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto 25px; 
+        }
+        h2 { color: #1e293b; margin-bottom: 15px; font-size: 24px; }
+        p { color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+        .btn { 
+            display: inline-block; 
+            background: #135bec; 
+            color: white; 
+            padding: 16px 32px; 
+            border-radius: 16px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 16px;
+            transition: 0.3s; 
+        }
+        .btn:active { transform: scale(0.95); background: #0a47c2; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-box">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2>Verification Ready!</h2>
+        <p>Hajurko email verify vayeko chha. Aba 3 second ma app aafai khulnechha...</p>
+        
+        <!-- Mobile App Redirect Link -->
+        <a href="loksewasolution://personal-info" class="btn">GO BACK TO APP</a>
+    </div>
+
+    <script>
+        // ३ सेकेन्डपछि अटोमेटिक एप खोल्ने प्रयास गर्ने
+        window.onload = function() {
+            setTimeout(function() {
+                window.location.href = "loksewasolution://personal-info";
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
